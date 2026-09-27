@@ -218,10 +218,40 @@ public class Timer {
      * @param i            the current iteration index, used for progress calculations.
      * @return the updated lastx value after status update.
      */
-    private <T, U> int doRepeatForIteration(int n, boolean warmup, Supplier<T> supplier, Function<T, U> function, UnaryOperator<T> preFunction, Consumer<U> postFunction, int lastx, int i) {
-        // TO BE IMPLEMENTED : note that the timer should be paused when this method is invoked. You may use doPrintStatus to show progress (but optional).
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+    private <T, U> int doRepeatForIteration(
+        int n,
+        boolean warmup,
+        Supplier<T> supplier,
+        Function<T, U> function,
+        UnaryOperator<T> preFunction,
+        Consumer<U> postFunction,
+        int lastx,
+        int i) {
+
+    T input = supplier.get();
+
+    if (preFunction != null) {
+        input = preFunction.apply(input);
     }
+
+    U result;
+    resume();
+    try {
+        result = function.apply(input);
+    } finally {
+        pauseAndLap();
+    }
+
+    if (postFunction != null) {
+        postFunction.accept(result);
+    }
+
+    if (!warmup) {
+        lastx = doPrintStatus(lastx, (int) (100L * i / n));
+    }
+
+    return lastx;
+}
 
     /**
      * Updates the status display by printing progress markers or a decrement value based on the input parameters.
@@ -306,9 +336,8 @@ public class Timer {
      * @return the number of ticks for the system clock. Currently defined as nano time.
      */
     private static long getClock() {
-        // TO BE IMPLEMENTED 
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
-    }
+    return System.nanoTime();
+}
 
     static Consumer<String> progressFunction(boolean showProgress) {
         return showProgress ? System.out::print : (s) -> {
@@ -323,9 +352,8 @@ public class Timer {
      * @return the corresponding number of milliseconds.
      */
     private static double toMillisecs(long ticks) {
-        // TO BE IMPLEMENTED 
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
-    }
+    return ticks / 1_000_000.0;
+}
 
     /**
      * TimerException is a custom unchecked exception used to indicate errors or invalid states

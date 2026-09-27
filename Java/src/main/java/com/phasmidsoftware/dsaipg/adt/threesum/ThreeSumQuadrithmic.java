@@ -57,8 +57,18 @@ class ThreeSumQuadrithmic implements ThreeSum {
      * or {@code null} if no such triple can be found.
      */
     Triple getTriple(int i, int j) {
-        // TO BE IMPLEMENTED  : use binary search to find the third element
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        long target = -(long) a[i] - a[j];
+        if (target < Integer.MIN_VALUE || target > Integer.MAX_VALUE) {
+        return null;
+        }
+        int k = Arrays.binarySearch(a, j + 1, length, (int) target);
+
+        if (k >= 0) {
+        return new Triple(a[i], a[j], a[k]);
+        }
+
+    return null;
+
     }
 
     private final int[] a;

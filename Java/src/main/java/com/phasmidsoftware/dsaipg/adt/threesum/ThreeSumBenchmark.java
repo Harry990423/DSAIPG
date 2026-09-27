@@ -102,8 +102,14 @@ public class ThreeSumBenchmark {
      */
     private void benchmarkThreeSum(final String description, final Consumer<int[]> function, int n, final TimeLogger[] timeLoggers) {
         if (description.equals("ThreeSumCubic") && n > 4000) return;
-        // TO BE IMPLEMENTED 
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        Benchmark_Timer<int[]> timer =
+            new Benchmark_Timer<>(description, config, function);
+
+    double time = timer.runFromSupplier(supplier, runs);
+
+    for (TimeLogger timeLogger : timeLoggers) {
+        timeLogger.log(description, time, n);
+    }
     }
 
     /**
