@@ -5,6 +5,8 @@
 package com.phasmidsoftware.dsaipg.misc.randomwalk;
 
 import java.util.Random;
+import com.phasmidsoftware.dsaipg.misc.lab_1.WheelOfFortune;
+import com.phasmidsoftware.dsaipg.misc.lab_1.WheelOfFortune.Event;
 
 /**
  * The RandomWalk class simulates a two-dimensional random walk. A "drunkard"
@@ -20,8 +22,8 @@ public class RandomWalk {
      * @return the (Euclidean) distance from the origin to the current position.
      */
     public double distance() {
-        // TO BE IMPLEMENTED 
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        return Math.sqrt((double) x * x + (double) y * y);
+                //throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
     }
 
     /**
@@ -31,8 +33,9 @@ public class RandomWalk {
      * @param dy the distance he moves in the y direction
      */
     private void move(int dx, int dy) {
-        // TO BE IMPLEMENTED  do move
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        x += dx;
+        y += dy;
+                //throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
     }
 
     /**
@@ -41,8 +44,10 @@ public class RandomWalk {
      * @param m the number of steps the drunkard takes
      */
     private void randomWalk(int m) {
-        // TO BE IMPLEMENTED 
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        for (int i = 0; i < m; i++) {
+        randomMove();
+     }
+                //throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
     }
 
     /**
@@ -50,9 +55,22 @@ public class RandomWalk {
      * That's to say, moves can be (+-1, 0) or (0, +-1).
      */
     private void randomMove() {
-        boolean ns = random.nextBoolean();
-        int step = random.nextBoolean() ? 1 : -1;
-        move(ns ? step : 0, ns ? 0 : step);
+        Direction nextStep = wheel.get();
+
+    switch (nextStep) {
+        case NORTH:
+            move(0, 1);
+            break;
+        case SOUTH:
+            move(0, -1);
+            break;
+        case EAST:
+            move(1, 0);
+            break;
+        case WEST:
+            move(-1, 0);
+            break;
+    }
     }
 
     /**
@@ -92,6 +110,24 @@ public class RandomWalk {
         }
         return totalDistance / n;
     }
+    private enum Direction {
+    NORTH, SOUTH, EAST, WEST
+    }
+
+    private final Event<Direction> north =
+        WheelOfFortune.valueOf(Direction.NORTH, 20);
+
+    private final Event<Direction> south =
+        WheelOfFortune.valueOf(Direction.SOUTH, 23);
+
+    private final Event<Direction> east =
+        WheelOfFortune.valueOf(Direction.EAST, 18);
+
+    private final Event<Direction> west =
+        WheelOfFortune.valueOf(Direction.WEST, 11);
+    
+    private final WheelOfFortune<Direction> wheel =
+        new WheelOfFortune<>(north, south, east, west);
 
     /**
      * The main method serves as the entry point to the RandomWalk program. It performs
@@ -104,6 +140,7 @@ public class RandomWalk {
      *             If args is empty, the method throws a RuntimeException indicating invalid syntax.
      */
     public static void main(String[] args) {
+        args = new String[]{"2500", "50"};
         if (args.length == 0)
             throw new RuntimeException("Syntax: RandomWalk steps [experiments]");
         int m = Integer.parseInt(args[0]);

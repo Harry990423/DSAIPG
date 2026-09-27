@@ -23,10 +23,17 @@ public class WheelOfFortune<T> {
      * is the quotient of the corresponding frequency and the value of total.
      */
     public T get() {
-        int r = random.nextInt(total);
-        // TO BE IMPLEMENTED 
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+    int r = random.nextInt(total);
+
+    for (Event<T> event : events) {
+        if (r < event.frequency) {
+            return event.event;
+        }
+        r -= event.frequency;
     }
+
+    throw new IllegalStateException("Invalid event weights");
+}
 
     /**
      * Primary constructor.
