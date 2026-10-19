@@ -21,13 +21,17 @@ public class Main {
      * @param args command-line arguments used for configuring program execution.
      */
     public static void main(String[] args) {
-        processArgs(args);
+        int startingCutoff = args.length == 0 ? 1000 : Integer.parseInt(args[0]);
+        if (startingCutoff < 1) {
+        throw new IllegalArgumentException("Cutoff must be positive");
+}
         System.out.println("Degree of parallelism: " + ForkJoinPool.getCommonPoolParallelism());
         Random random = new Random();
         int[] array = new int[2000000];
         Collection<Long> timeList = new ArrayList<>();
+        ParSort.maxDepth = 3;
         for (int j = 50; j < 100; j++) {
-            ParSort.cutoff = 10000 * (j + 1);
+            ParSort.cutoff = startingCutoff + 10000 * (j - 50);
             // for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
             long time;
             long startTime = System.currentTimeMillis();
@@ -40,16 +44,16 @@ public class Main {
             timeList.add(time);
 
 
-            System.out.println("cutoff：" + (ParSort.cutoff) + "\t\t10times Time:" + time + "ms");
+            System.out.println("cutoff:" + (ParSort.cutoff) + "\t\t10times Time:" + time + "ms");
 
         }
         try {
-            FileOutputStream fis = new FileOutputStream("./src/result.csv");
+            FileOutputStream fis = new FileOutputStream("./Java/src/result.csv");
             OutputStreamWriter isr = new OutputStreamWriter(fis);
             BufferedWriter bw = new BufferedWriter(isr);
             int j = 0;
             for (long i : timeList) {
-                String content = (double) 10000 * (j + 1) / 2000000 + "," + (double) i / 10 + "\n";
+                String content = (startingCutoff + 10000L * j) + "," + (double) i / 10 + "\n";
                 j++;
                 bw.write(content);
                 bw.flush();

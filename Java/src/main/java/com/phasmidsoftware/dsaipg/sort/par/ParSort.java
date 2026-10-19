@@ -24,6 +24,12 @@ final class ParSort {
     public static int cutoff = 1000;
 
     /**
+     * Maximum recursion depth for parallel splitting.
+     * Integer.MAX_VALUE means there is effectively no depth limit.
+     */
+    public static int maxDepth = Integer.MAX_VALUE;
+
+    /**
      * Sorts the specified portion of the input array using a parallel sorting algorithm.
      * If the range to be sorted is smaller than a predefined cutoff value, the method
      * utilizes a single-threaded sorting based on {@link Arrays#sort}. For larger ranges,
@@ -35,13 +41,28 @@ final class ParSort {
      * @param to    the ending index (exclusive) of the portion of the array to be sorted
      */
     public static void sort(int[] array, int from, int to) {
-        if (to - from >= cutoff) {
-            CompletableFuture<int[]> completableFuture1 = null;
-            CompletableFuture<int[]> completableFuture2 = null;
-            // TO BE IMPLEMENTED 
-                        throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
-        } else
+        int length = to - from;
+
+        if (length <= 1
+                || length < Math.max(1, cutoff)
+                || maxDepth <= 0) {
             Arrays.sort(array, from, to);
+            return;
+        }
+
+        int middle = from + length / 2;
+
+        CompletableFuture<int[]> completableFuture1 =
+                asyncSort(array, from, middle, 1);
+        CompletableFuture<int[]> completableFuture2 =
+                asyncSort(array, middle, to, 1);
+
+        int[] sorted = doMerge(
+                completableFuture1.join(),
+                completableFuture2.join()
+        );
+
+        System.arraycopy(sorted, 0, array, from, sorted.length);
     }
 
     /**
@@ -50,14 +71,33 @@ final class ParSort {
      * and provides the sorted result as a new array, leaving the input array unchanged.
      *
      * @param array the input array from which a portion will be sorted
-     * @param from  the starting index (inclusive) of the portion of the array to be sorted
-     * @param to    the ending index (exclusive) of the portion of the array to be sorted
+     * @param from  the starting index (inclusive) of the portion of the array
+     * @param to    the ending index (exclusive) of the portion of the array
      * @return a new sorted array containing the elements from the specified range of the input array
      */
     static int[] sortRecursive(int[] array, int from, int to) {
-        int[] result = new int[to - from];
-        // TO BE IMPLEMENTED  you need to do something here so that result is the sorted version of array
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        return sortRecursive(array, from, to, 0);
+    }
+
+    private static int[] sortRecursive(int[] array, int from, int to, int depth) {
+        int[] result = Arrays.copyOfRange(array, from, to);
+        int length = result.length;
+
+        if (length <= 1
+                || length < Math.max(1, cutoff)
+                || depth >= maxDepth) {
+            Arrays.sort(result);
+            return result;
+        }
+
+        int middle = length / 2;
+
+        CompletableFuture<int[]> left =
+                asyncSort(result, 0, middle, depth + 1);
+        CompletableFuture<int[]> right =
+                asyncSort(result, middle, length, depth + 1);
+
+        return doMerge(left.join(), right.join());
     }
 
     /**
@@ -73,12 +113,14 @@ final class ParSort {
         int[] result = new int[xs1.length + xs2.length];
         int i = 0;
         int j = 0;
+
         for (int k = 0; k < result.length; k++) {
             if (i >= xs1.length) result[k] = xs2[j++];
             else if (j >= xs2.length) result[k] = xs1[i++];
             else if (xs2[j] < xs1[i]) result[k] = xs2[j++];
             else result[k] = xs1[i++];
         }
+
         return result;
     }
 
@@ -93,8 +135,13 @@ final class ParSort {
      * @return a CompletableFuture containing the sorted section of the array
      */
     static CompletableFuture<int[]> asyncSort(int[] array, int from, int to) {
+        return asyncSort(array, from, to, 0);
+    }
+
+    private static CompletableFuture<int[]> asyncSort(
+            int[] array, int from, int to, int depth) {
         return CompletableFuture.supplyAsync(
-                () -> sortRecursive(array, from, to)
+                () -> sortRecursive(array, from, to, depth)
         );
     }
 }
