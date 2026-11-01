@@ -140,19 +140,47 @@ public class MergeSort<X extends Comparable<X>> extends SortWithComparableHelper
      * @param depth
      */
     private void sort(X[] primary, X[] secondary, int from, int to, int depth) {
-        getHelper().registerDepth(depth);
-        Config config = helper.getConfig();
-        boolean noCopy = config.getBoolean(MERGESORT, NOCOPY); // XXX I recommend that you test noCopy before testing insurance.
-        boolean insurance = config.getBoolean(MERGESORT, INSURANCE);
-        assert !noCopy || Arrays.compare(primary, from, to, secondary, from, to) == 0 : "MergeSort::sort: partitions are not the same";
-        if (to <= from + helper.cutoff()) { // XXX check that a cutoff value of 1 effectively stops the cutoff mechanism.
-            insertionSort.sort(primary, from, to);
+    getHelper().registerDepth(depth);
+    Config config = helper.getConfig();
+    boolean noCopy = config.getBoolean(MERGESORT, NOCOPY);
+    boolean insurance = config.getBoolean(MERGESORT, INSURANCE);
+
+    assert !noCopy || Arrays.compare(primary, from, to, secondary, from, to) == 0
+            : "MergeSort::sort: partitions are not the same";
+
+    if (to <= from + helper.cutoff()) {
+        insertionSort.sort(primary, from, to);
+        return;
+    }
+
+    int mid = from + (to - from) / 2;
+
+    if (noCopy) {
+        sort(secondary, primary, from, mid, depth + 1);
+        sort(secondary, primary, mid, to, depth + 1);
+
+        if (insurance && !helper.inverted(
+                helper.get(secondary, mid - 1),
+                helper.get(secondary, mid))) {
+            helper.copyBlock(secondary, from, primary, from, to - from);
             return;
         }
 
-        // TO BE IMPLEMENTED  : implement merge sort with no-copy and insurance optimizations (use helper.less and helper.copyBlock)
-                throw new com.phasmidsoftware.dsaipg.util.general.ImplementationMissing();
+        merge(secondary, primary, from, mid, to);
+    } else {
+        sort(primary, secondary, from, mid, depth + 1);
+        sort(primary, secondary, mid, to, depth + 1);
+
+        if (insurance && !helper.inverted(
+                helper.get(primary, mid - 1),
+                helper.get(primary, mid))) {
+            return;
+        }
+
+        helper.copyBlock(primary, from, secondary, from, to - from);
+        merge(secondary, primary, from, mid, to);
     }
+}
 
     /**
      * Merges two sorted partitions (subarrays) into a combined sorted partition (subarray).
